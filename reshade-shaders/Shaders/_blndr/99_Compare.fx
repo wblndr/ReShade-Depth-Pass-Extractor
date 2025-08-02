@@ -11,6 +11,8 @@ uniform int DisplayMode <
     ui_items = "Split Game View (L/R)\0Compare Left Half\0Compare Center Half\0";
 > = 2;
 
+uniform bool InvertDepth = false;
+
 float4 PS_Compare(float4 svpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_Target
 {
     float split_x_output = 0.5;
@@ -50,6 +52,11 @@ float4 PS_Compare(float4 svpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_
             sample_uv.x = texcoord.x - 0.25;
             output_color = tex2D(EffectedSampler, sample_uv);
         }
+    }
+
+    if (InvertDepth && !is_left_panel)
+    {
+        output_color.rgb = 1.0 - output_color.rgb;
     }
 
     return output_color;

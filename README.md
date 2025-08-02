@@ -15,21 +15,68 @@ This project provides tools and shaders for extracting depth information from ga
 
 ## Installation
 
-1. Download the shader files
-2. Place them in your ReShade shaders directory
-3. Enable the shaders in ReShade
+### Prerequisites
+- ReShade installed in your game
+- A game that supports depth buffer access (most modern games)
+- FFmpeg installed on your system (for video processing)
+
+### Step-by-Step Installation
+1. **Download the shader files** from this repository
+2. **Locate your ReShade shaders directory**:
+   - Usually found in: `[Game Directory]/reshade-shaders/Shaders/`
+   - Or in ReShade's global shader directory
+3. **Copy the shader files**:
+   - Copy `01_Capture.fx` and `99_Compare.fx` to your shaders folder
+   - You can create a `_blndr` subfolder to organize them
+4. **Restart your game** to load the new shaders
 
 ## Usage
 
-1. Install ReShade in your game
-2. Add the capture and compare shaders
-3. Run the `ProcessVideos.bat` script to process your recordings
+### Setting Up Depth Capture
+1. **Launch your game** with ReShade enabled
+2. **Open ReShade overlay** (usually `Home` key)
+3. **Enable the shaders**:
+   - Find and enable `01_Capture.fx` for depth capture
+   - Find and enable `99_Compare.fx` for side-by-side comparison
+4. **Configure shader settings** as needed for your specific game
+
+### Recording and Processing
+1. **Record gameplay** with the depth capture shader active
+2. **Save your recordings** in a folder accessible to the batch script
+3. **Run `ProcessVideos.bat`**:
+   - Double-click the batch file
+   - Or run it from command line: `ProcessVideos.bat [input_folder] [output_folder]`
+4. **Check the output** for processed side-by-side comparison videos
+
+### Configuration
+- Edit `sidebyside.ini` to customize video processing settings
+- Modify shader parameters in-game through ReShade overlay
+- Adjust batch script parameters for different video formats
 
 ## Requirements
 
-- ReShade
-- A game that supports depth buffer access
-- Video processing software (for batch processing)
+### Software Requirements
+- **ReShade** - Latest version recommended
+- **FFmpeg** - For video processing (download from [ffmpeg.org](https://ffmpeg.org))
+- **A game that supports depth buffer access** - Most modern games work
+
+### System Requirements
+- Windows 10/11 (for batch script compatibility)
+- Sufficient disk space for video processing
+- Graphics card that supports ReShade
+
+## Troubleshooting
+
+### Common Issues
+- **Shaders not appearing**: Make sure files are in the correct directory and game is restarted
+- **Depth buffer not working**: Some games require specific ReShade settings or compatibility mode
+- **Batch script errors**: Ensure FFmpeg is installed and in your system PATH
+- **Poor performance**: Try reducing shader complexity or game settings
+
+### Getting Help
+- Check that your game supports depth buffer access
+- Verify ReShade is properly installed and working
+- Ensure all file paths in the batch script are correct
 
 ## Contributing
 

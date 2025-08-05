@@ -246,8 +246,14 @@ echo.
 echo --- FFmpeg Output ---
 
 :: --- The FFmpeg Command with DYNAMIC CROPS and OPTIMIZED CODECS ---
-:: World Pass uses ProRes 422 HQ for excellent quality and smaller files.
-:: Depth Pass uses QuickTime Animation (qtrle) for mathematically lossless data compatible with all major NLEs.
+:: This is the core command that splits the video. You can change the codecs here.
+::
+:: - `-c:v prores_ks -profile:v 3` sets the World Pass to ProRes 422 HQ.
+::   - Good for high-quality, visually lossless color.
+:: - `-c:v qtrle` sets the Other Pass to QuickTime Animation.
+::   - Mathematically lossless, perfect for data passes like depth maps.
+::
+:: For other options (like H.264 for smaller files), see the README.md.
 "%FFMPEG_EXE%" -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
  -map "[world]" -an -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le -qscale:v 2 "%OUTPUT_WORLD%" ^
  -map "[depth]" -an -c:v qtrle "%OUTPUT_DEPTH%"

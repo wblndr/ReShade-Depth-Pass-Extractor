@@ -1,91 +1,95 @@
-# ReShade Depth Pass Extractor
+# ReShade Side-by-Side Video Extractor
 
-A tool for extracting depth passes from ReShade shaders and creating side-by-side comparison videos.
+This project provides a set of ReShade shaders and a Windows batch script to capture and process side-by-side videos from any game running ReShade. It's designed to extract a "clean" world pass and a second pass (like a depth map, normal map, etc.) from a single recording, saving them as separate, high-quality video files.
 
-## Overview
+This workflow is ideal for VFX, motion graphics, and game art, allowing you to use in-game footage as a source for post-production work.
 
-This project provides tools and shaders for extracting depth information from games using ReShade, allowing you to create depth pass visualizations and comparisons.
+## How It Works
 
-## Files
+1.  **Capture Shader (`01_Capture.fx`):** This shader runs *first* in your ReShade list. It silently captures the original, unmodified game frame and stores it in memory.
+2.  **Effect Shaders (e.g., Depth, Normals):** You place your desired effect shaders (like `DisplayDepth.fx`) *after* the capture shader.
+3.  **Compare Shader (`99_Compare.fx`):** This shader runs *last*. It takes the original frame captured by the first shader and the final, effected frame, and draws them side-by-side on the screen.
+4.  **Recording:** You use your screen recording software (like OBS, ShadowPlay, etc.) to record the side-by-side output from ReShade.
+5.  **Processing (`ProcessVideos.bat`):** You feed the recorded video into the batch script, which uses FFmpeg to automatically split the video into two separate files: one for the world pass and one for the other pass.
 
-- **`ProcessVideos.bat`** - Batch script for processing video files
-- **`reshade-shaders/Shaders/_blndr/01_Capture.fx`** - ReShade shader for capturing depth data
-- **`reshade-shaders/Shaders/_blndr/99_Compare.fx`** - ReShade shader for comparing depth passes
-- **`sidebyside.ini`** - Configuration file for side-by-side video processing
+## Included Files
+
+-   **`ProcessVideos.bat`**: A powerful batch script with two modes for processing your recorded videos. It automatically detects FFmpeg and splits the side-by-side video into two separate files.
+-   **`reshade-shaders/Shaders/_blndr/01_Capture.fx`**: The ReShade shader that must be **first** in your technique order to capture the clean game view.
+-   **`reshade-shaders/Shaders/_blndr/99_Compare.fx`**: The ReShade shader that must be **last** in your technique order to create the side-by-side comparison view.
 
 ## Installation
 
 ### Prerequisites
-- ReShade installed in your game
-- A game that supports depth buffer access (most modern games)
-- FFmpeg installed on your system (for video processing)
+-   ReShade installed in your game.
+-   FFmpeg installed on your system. The script will guide you if it's missing, but the easiest way is to install it via winget:
+    ```powershell
+    winget install "FFmpeg (Essentials Build)"
+    ```
 
-### Step-by-Step Installation
-1. **Download the shader files** from this repository
-2. **Locate your ReShade shaders directory**:
-   - Usually found in: `[Game Directory]/reshade-shaders/Shaders/`
-   - Or in ReShade's global shader directory
-3. **Copy the shader files**:
-   - Copy `01_Capture.fx` and `99_Compare.fx` to your shaders folder
-   - You can create a `_blndr` subfolder to organize them
-4. **Restart your game** to load the new shaders
+### Step-by-Step
+1.  **Download the files** from this repository.
+2.  **Copy the `reshade-shaders` folder** into your game's root directory where the game's `.exe` file is located. This will place the `.fx` files in `[Game Directory]/reshade-shaders/Shaders/_blndr/`.
+3.  **Start your game** and open the ReShade overlay (usually the `Home` key).
+4.  **Set the Shader Order:**
+    -   Drag **`01_Capture.fx`** to the very **top** of your active shader list.
+    -   Drag **`99_Compare.fx`** to the very **bottom** of the list.
+    -   Place any shaders you want to extract (e.g., `DisplayDepth.fx`) in between.
+5.  You should now see a side-by-side view in your game. You are ready to record!
 
 ## Usage
 
-### Setting Up Depth Capture
-1. **Launch your game** with ReShade enabled
-2. **Open ReShade overlay** (usually `Home` key)
-3. **Enable the shaders**:
-   - Find and enable `01_Capture.fx` for depth capture
-   - Find and enable `99_Compare.fx` for side-by-side comparison
-4. **Configure shader settings** as needed for your specific game
+### Processing Your Videos
+The `ProcessVideos.bat` script has two modes:
 
-### Recording and Processing
-1. **Record gameplay** with the depth capture shader active
-2. **Save your recordings** in a folder accessible to the batch script
-3. **Run `ProcessVideos.bat`**:
-   - Double-click the batch file
-   - Or run it from command line: `ProcessVideos.bat [input_folder] [output_folder]`
-4. **Check the output** for processed side-by-side comparison videos
+1.  **Watcher Mode (Recommended):**
+    -   Configure the `VIDEO_SOURCE_DIR` variable inside the script to point to your recordings folder.
+    -   Simply double-click the `.bat` file to run it.
+    -   It will continuously watch the folder for new videos and process them automatically. This is great for batch processing.
 
-### Configuration
-- Edit `sidebyside.ini` to customize video processing settings
-- Modify shader parameters in-game through ReShade overlay
-- Adjust batch script parameters for different video formats
+2.  **Drag-and-Drop Mode:**
+    -   Drag a single video file directly onto the `ProcessVideos.bat` icon.
+    -   The script will process just that one file.
 
-## Requirements
+### Shader Configuration
+The `99_Compare.fx` shader has a few options in the ReShade UI:
+-   **World on Right:** Check this box if you want to swap the positions of the world pass and the effect pass. **This setting must match the `WORLD_ON_RIGHT` variable in the batch script!**
+-   **Display Mode:** Changes how the two passes are compared (e.g., split screen, centered overlay).
+-   **Invert Depth:** A utility to flip the colors of the effect pass, which can be useful for depth maps.
 
-### Software Requirements
-- **ReShade** - Latest version recommended
-- **FFmpeg** - For video processing (download from [ffmpeg.org](https://ffmpeg.org))
-- **A game that supports depth buffer access** - Most modern games work
+## Codec Configuration
 
-### System Requirements
-- Windows 10/11 (for batch script compatibility)
-- Sufficient disk space for video processing
-- Graphics card that supports ReShade
+The batch script is pre-configured for high-quality, professional video formats suitable for post-production. You can, however, change these settings by editing `ProcessVideos.bat`.
+
+### Default Codecs
+-   **World Pass (`_world.mov`):** `ProRes 422 HQ`
+    -   **Why:** Excellent quality, widely supported in video editing software, and visually lossless. Great for color grading.
+-   **Other Pass (`_depth.mov`):** `QuickTime Animation (QTRLE)`
+    -   **Why:** Mathematically lossless. This is critical for data passes like depth or normal maps, where every single color value is important and must not be altered by compression.
+
+### How to Change Codecs
+1.  Open `ProcessVideos.bat` in a text editor.
+2.  Find the line that starts with `"%FFMPEG_EXE%" -i "%INPUT_FILE%" ...`.
+3.  The world pass codec is defined by `-c:v prores_ks -profile:v 3 ...`.
+4.  The other pass codec is defined by `-c:v qtrle`.
+5.  You can replace these with other FFmpeg-supported codecs.
+
+**Example: Using H.264 for smaller files (lower quality)**
+If you need smaller files and don't require lossless data, you could change the command to use `libx264` for both passes:
+'''batch
+:: --- Example for H.264 output ---
+"%FFMPEG_EXE%" -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
+ -map "[world]" -an -c:v libx264 -preset medium -crf 23 "%OUTPUT_WORLD%" ^
+ -map "[depth]" -an -c:v libx264 -preset medium -crf 23 "%OUTPUT_DEPTH%"
+'''
 
 ## Troubleshooting
-
-### Common Issues
-- **Shaders not appearing**: Make sure files are in the correct directory and game is restarted
-- **Depth buffer not working**: Some games require specific ReShade settings or compatibility mode
-- **Batch script errors**: Ensure FFmpeg is installed and in your system PATH
-- **Poor performance**: Try reducing shader complexity or game settings
-
-### Getting Help
-- Check that your game supports depth buffer access
-- Verify ReShade is properly installed and working
-- Ensure all file paths in the batch script are correct
+-   **Shaders not appearing:** Ensure they are in the correct `reshade-shaders/Shaders` directory and that you have restarted your game.
+-   **Batch script errors:** Make sure FFmpeg is installed and accessible in your system's PATH. The script has a built-in check that will alert you if it can't find it.
+-   **Incorrect output:** Double-check that the `World on Right` setting in the `99_Compare.fx` shader matches the `WORLD_ON_RIGHT` variable in `ProcessVideos.bat`.
 
 ## Contributing
-
-Feel free to submit issues and enhancement requests!
-
-## License
-
-[Add your license information here]
+Feel free to open an issue to report bugs or suggest features.
 
 ---
-
-*Created by wblndr* 
+*Created by wblndr*

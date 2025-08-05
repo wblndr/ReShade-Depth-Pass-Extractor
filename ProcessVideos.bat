@@ -1,54 +1,15 @@
 @echo off
 setlocal enabledelayedexpansion
-
-:: ################################################################################################
-:: ###                                    CONFIGURATION                                         ###
-:: ################################################################################################
-
-:: --- Output Order Settings ---
-:: IMPORTANT: This must match the setting in your ReShade preset!
-:: Set to "true" if the "World on Right, Depth on Left" checkbox is CHECKED in your shader.
-:: Set to "false" if it is UNCHECKED (World on Left, default).
 set "REVERSE_SHADER_ORDER=false"
-
-
-:: --- Main Settings ---
-:: 1. Set the folder to monitor for new video files.
-::    This folder must exist before running in watcher mode.
-::    EXAMPLE: set "VIDEO_SOURCE_DIR=D:\Videos\ToProcess"
 set "VIDEO_SOURCE_DIR=%USERPROFILE%\Videos\Depth_ToProcess"
-
-:: 2. How often to check the folder (in seconds) (only used in Watcher Mode)
 set "CHECK_INTERVAL_SECONDS=60"
-
-:: 3. List of video file extensions to look for (space separated, include the dot)
 set "VIDEO_EXTENSIONS=.mp4 .mov .mkv .avi .mxf"
-
-:: --- Processing & Output Settings ---
-:: 4. Name of the subfolder where processed videos are stored.
-set "OUTPUT_SUBFOLDER_NAME=Passes_ProRes4444"
-
-:: 5. The suffixes to add to the original filename for the split outputs.
+set "OUTPUT_SUBFOLDER_NAME=Passes_ProRes422HQ"
 set "OUTPUT_WORLD_SUFFIX=_world"
 set "OUTPUT_DEPTH_SUFFIX=_depth"
-
-:: 6. The output file extension. Both passes will be saved as .mov files.
 set "OUTPUT_EXTENSION=.mov"
-
-:: 7. After a video is processed successfully, should the original file be moved?
 set "MOVE_ORIGINAL_ON_SUCCESS=true"
-
-:: 8. If moving originals, what should the subfolder they are moved to be called?
 set "PROCESSED_ORIGINALS_SUBFOLDER=Originals_Processed"
-
-:: ################################################################################################
-:: ###                                 END OF CONFIGURATION                                     ###
-:: ################################################################################################
-
-
-:: --- Script Initialization ---
-
-:: Step 1: Check for a system-wide FFmpeg installation first.
 echo [INFO] Checking for system-wide FFmpeg installation...
 ffmpeg -version >nul 2>nul
 if %errorlevel% equ 0 (
@@ -72,7 +33,6 @@ if %errorlevel% equ 0 (
 echo [INFO] Using FFmpeg executable at: "%FFMPEG_EXE%"
 echo.
 goto :start_script
-
 :ffmpeg_error
 cls
 echo ========================================================================
@@ -105,19 +65,12 @@ echo ------------------------------------------------------------------------
 echo.
 pause
 exit /b 1
-
 :start_script
-:: --- Mode Selection ---
 if not "%~1"=="" (
     goto :ManualMode
 ) else (
     goto :WatcherMode
 )
-
-
-:: ################################################################################################
-:: ###                                 MANUAL / DRAG-DROP MODE                                  ###
-:: ################################################################################################
 :ManualMode
 cls
 echo ============================================================
@@ -140,11 +93,6 @@ echo.
 echo Press any key to exit.
 pause >nul
 exit /b !errorlevel!
-
-
-:: ################################################################################################
-:: ###                                    FOLDER WATCHER MODE                                   ###
-:: ################################################################################################
 :WatcherMode
 cls
 echo ============================================================
@@ -173,13 +121,11 @@ for %%e in (%VIDEO_EXTENSIONS%) do (
     for /f "delims=" %%f in ('dir /b /a-d "%VIDEO_SOURCE_DIR%\*%%e" 2^>nul') do (
         set "INPUT_FILE_FULL_PATH=%VIDEO_SOURCE_DIR%\%%f"
         set "INPUT_FILE_NAME_NO_EXT=%%~nf"
-        set "CHECK_OUTPUT_FILE=%VIDEO_SOURCE_DIR%\%OUTPUT_SUBFOLDER_NAME%\!INPUT_FILE_NAME_NO_EXT!%OUTPUT_WORLD_SUFFIX%%OUTPUT_EXTENSION%"
-        
+        set "CHECK_OUTPUT_FILE=%VIDEO_SOURCE_DIR%\%OUTPUT_SUBFOLDER_NAME%\!INPUT_FILE_NAME_NO_EXT!!OUTPUT_WORLD_SUFFIX!!OUTPUT_EXTENSION%"
         if not exist "!CHECK_OUTPUT_FILE!" (
             echo.
             echo [%TIME%] [INFO] Found new video: "%%f"
             call :ProcessSingleFile "!INPUT_FILE_FULL_PATH!"
-            
             if !errorlevel! neq 0 (
                 echo [%TIME%] [ERROR] Processing failed for "%%f". The original file will not be moved.
             ) else (
@@ -193,8 +139,6 @@ for %%e in (%VIDEO_EXTENSIONS%) do (
                         if !errorlevel! neq 0 (
                             echo [%TIME%] [ERROR] Could not move original file "%%f".
                         )
-                    ) else (
-                        echo [%TIME%] [ERROR] Could not create or find directory for processed originals: "!PROCESSED_DIR!"
                     )
                 )
             )
@@ -205,11 +149,6 @@ for %%e in (%VIDEO_EXTENSIONS%) do (
 echo [%TIME%] [INFO] Scan complete. Waiting for %CHECK_INTERVAL_SECONDS% seconds...
 timeout /t %CHECK_INTERVAL_SECONDS% /nobreak >nul
 goto :WatcherLoop
-
-
-:: ################################################################################################
-:: ###                           CORE PROCESSING SUBROUTINE                                     ###
-:: ################################################################################################
 :ProcessSingleFile
 set "INPUT_FILE=%~1"
 set "INPUT_FILE_DIR=%~dp1"
@@ -223,8 +162,6 @@ if not exist "%OUTPUT_PASSES_DIR%" (
         exit /b 1
     )
 )
-
-:: --- Determine which half of the video is which based on the reverse order setting ---
 if /i "!REVERSE_SHADER_ORDER!" == "true" (
     echo [INFO] Reverse Order Mode is ON. Mapping RIGHT half to World, LEFT half to Depth.
     set "WORLD_CROP=iw/2:ih:iw/2:0"
@@ -234,29 +171,19 @@ if /i "!REVERSE_SHADER_ORDER!" == "true" (
     set "WORLD_CROP=iw/2:ih:0:0"
     set "DEPTH_CROP=iw/2:ih:iw/2:0"
 )
-
-:: --- Construct full output paths ---
 set "OUTPUT_WORLD=%OUTPUT_PASSES_DIR%\%INPUT_FILE_NAME_NO_EXT%%OUTPUT_WORLD_SUFFIX%%OUTPUT_EXTENSION%"
 set "OUTPUT_DEPTH=%OUTPUT_PASSES_DIR%\%INPUT_FILE_NAME_NO_EXT%%OUTPUT_DEPTH_SUFFIX%%OUTPUT_EXTENSION%"
-
 echo [INFO] Starting processing for: %INPUT_FILE_NAME_NO_EXT%
 echo [INFO] Output (World): "%OUTPUT_WORLD%"
 echo [INFO] Output (Depth): "%OUTPUT_DEPTH%"
 echo.
 echo --- FFmpeg Output ---
-
-:: --- The FFmpeg Command with DYNAMIC CROPS and UNIVERSAL CODECS ---
-:: World Pass uses ProRes for visually lossless color.
-:: Depth Pass uses QuickTime Animation (qtrle) for mathematically lossless data compatible with all major NLEs.
 "%FFMPEG_EXE%" -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
- -map "[world]" -an -c:v prores_ks -profile:v 4 -pix_fmt yuva444p10le -qscale:v 2 "%OUTPUT_WORLD%" ^
+ -map "[world]" -an -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le -qscale:v 2 "%OUTPUT_WORLD%" ^
  -map "[depth]" -an -c:v qtrle "%OUTPUT_DEPTH%"
-
 set "FFMPEG_ERRORLEVEL=%errorlevel%"
 echo --- End of FFmpeg Output ---
 echo.
-
-:: Critical "Proof of Work" Verification
 if %FFMPEG_ERRORLEVEL% equ 0 (
     if not exist "%OUTPUT_WORLD%" (
         echo [ERROR] Verification failed! World pass file was not created.

@@ -7,9 +7,9 @@ setlocal enabledelayedexpansion
 
 :: --- Output Order Settings ---
 :: IMPORTANT: This must match the setting in your ReShade preset!
-:: Set to "true" if the "World on Right, Depth on Left" checkbox is CHECKED in your shader.
+:: Set to "true" if the "World on Right" checkbox is CHECKED in your shader.
 :: Set to "false" if it is UNCHECKED (World on Left, default).
-set "REVERSE_SHADER_ORDER=false"
+set "WORLD_ON_RIGHT=false" 
 
 
 :: --- Main Settings ---
@@ -124,7 +124,7 @@ echo ============================================================
 echo  Manual Processing Mode
 echo ============================================================
 echo.
-echo [REMINDER] Ensure the 'REVERSE_SHADER_ORDER' setting in this script
+echo [REMINDER] Ensure the 'WorldOnRight' setting in this script
 echo [REMINDER] matches the checkbox setting in your ReShade preset!
 echo.
 echo [INFO] Processing a single file: "%~f1"
@@ -155,7 +155,7 @@ echo [INFO] Monitoring Folder: %VIDEO_SOURCE_DIR%
 echo [INFO] Check Interval:    %CHECK_INTERVAL_SECONDS% seconds
 echo [INFO] Move Originals:    %MOVE_ORIGINAL_ON_SUCCESS%
 echo.
-echo [REMINDER] Ensure the 'REVERSE_SHADER_ORDER' setting in this script
+echo [REMINDER] Ensure the 'WorldOnRight' setting in this script
 echo [REMINDER] matches the checkbox setting in your ReShade preset!
 echo.
 echo Press Ctrl+C to stop the watcher.
@@ -225,12 +225,12 @@ if not exist "%OUTPUT_PASSES_DIR%" (
 )
 
 :: --- Determine which half of the video is which based on the reverse order setting ---
-if /i "!REVERSE_SHADER_ORDER!" == "true" (
-    echo [INFO] Reverse Order Mode is ON. Mapping RIGHT half to World, LEFT half to Depth.
+if /i "!WORLD_ON_RIGHT!" == "true" (
+    echo [INFO] Reverse Order Mode is ON. Mapping RIGHT half to World, LEFT half to Other.
     set "WORLD_CROP=iw/2:ih:iw/2:0"
     set "DEPTH_CROP=iw/2:ih:0:0"
 ) else (
-    echo [INFO] Default Order Mode is ON. Mapping LEFT half to World, RIGHT half to Depth.
+    echo [INFO] Default Order Mode is ON. Mapping LEFT half to World, RIGHT half to Other.
     set "WORLD_CROP=iw/2:ih:0:0"
     set "DEPTH_CROP=iw/2:ih:iw/2:0"
 )

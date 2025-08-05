@@ -15,7 +15,9 @@ float4 PS_Capture(float4 vpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_T
     return tex2D(PassInputColorSampler, texcoord);
 }
 
-technique Capture
+technique Capture <
+    ui_tooltip = "This shader must be first in the list. It captures the original, unmodified frame so that it can be compared later with the final processed frame (e.g., depth map).";
+>
 {
     pass
     {

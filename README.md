@@ -6,17 +6,17 @@ This workflow is ideal for VFX, motion graphics, and game art, allowing you to u
 
 ## How It Works
 
-1.  **Capture Shader (`01_Capture.fx`):** This shader runs *first* in your ReShade list. It silently captures the original, unmodified game frame and stores it in memory.
+1.  **Capture Shader (`01_WorldCapture.fx`):** This shader runs *first* in your ReShade list. It silently captures the original, unmodified game frame and stores it in memory.
 2.  **Effect Shaders (e.g., Depth, Normals):** You place your desired effect shaders (like `DisplayDepth.fx`) *after* the capture shader.
-3.  **Compare Shader (`99_Compare.fx`):** This shader runs *last*. It takes the original frame captured by the first shader and the final, effected frame, and draws them side-by-side on the screen.
+3.  **Compare Shader (`99_SideBySideOutput.fx`):** This shader runs *last*. It takes the original frame captured by the first shader and the final, effected frame, and draws them side-by-side on the screen.
 4.  **Recording:** You use your screen recording software (like OBS, ShadowPlay, etc.) to record the side-by-side output from ReShade.
 5.  **Processing (`ProcessVideos.bat`):** You feed the recorded video into the batch script, which uses FFmpeg to automatically split the video into two separate files: one for the world pass and one for the other pass.
 
 ## Included Files
 
 -   **`ProcessVideos.bat`**: A powerful batch script with two modes for processing your recorded videos. It automatically detects FFmpeg and splits the side-by-side video into two separate files.
--   **`reshade-shaders/Shaders/_blndr/01_Capture.fx`**: The ReShade shader that must be **first** in your technique order to capture the clean game view.
--   **`reshade-shaders/Shaders/_blndr/99_Compare.fx`**: The ReShade shader that must be **last** in your technique order to create the side-by-side comparison view.
+-   **`reshade-shaders/Shaders/_blndr/01_WorldCapture.fx`**: The ReShade shader that must be **first** in your technique order to capture the clean game view.
+-   **`reshade-shaders/Shaders/_blndr/99_SideBySideOutput.fx`**: The ReShade shader that must be **last** in your technique order to create the side-by-side comparison view.
 
 ## Installation
 
@@ -28,12 +28,15 @@ This workflow is ideal for VFX, motion graphics, and game art, allowing you to u
     ```
 
 ### Step-by-Step
+
+**Note:** You will need to configure your ReShade shaders manually by following the steps below. A pre-configured preset file is not provided.
+
 1.  **Download the files** from this repository.
 2.  **Copy the `reshade-shaders` folder** into your game's root directory where the game's `.exe` file is located. This will place the `.fx` files in `[Game Directory]/reshade-shaders/Shaders/_blndr/`.
 3.  **Start your game** and open the ReShade overlay (usually the `Home` key).
 4.  **Set the Shader Order:**
-    -   Drag **`01_Capture.fx`** to the very **top** of your active shader list.
-    -   Drag **`99_Compare.fx`** to the very **bottom** of the list.
+    -   Drag **`01_WorldCapture.fx`** to the very **top** of your active shader list.
+    -   Drag **`99_SideBySideOutput.fx`** to the very **bottom** of the list.
     -   Place any shaders you want to extract (e.g., `DisplayDepth.fx`) in between.
 5.  You should now see a side-by-side view in your game. You are ready to record!
 
@@ -52,7 +55,7 @@ The `ProcessVideos.bat` script has two modes:
     -   The script will process just that one file.
 
 ### Shader Configuration
-The `99_Compare.fx` shader has a few options in the ReShade UI:
+The `99_SideBySideOutput.fx` shader has a few options in the ReShade UI:
 -   **World on Right:** Check this box if you want to swap the positions of the world pass and the effect pass. **This setting must match the `WORLD_ON_RIGHT` variable in the batch script!**
 -   **Display Mode:** Changes how the two passes are compared (e.g., split screen, centered overlay).
 -   **Invert Depth:** A utility to flip the colors of the effect pass, which can be useful for depth maps.
@@ -72,21 +75,12 @@ The batch script is pre-configured for high-quality, professional video formats 
 2.  Find the line that starts with `"%FFMPEG_EXE%" -i "%INPUT_FILE%" ...`.
 3.  The world pass codec is defined by `-c:v prores_ks -profile:v 3 ...`.
 4.  The other pass codec is defined by `-c:v qtrle`.
-5.  You can replace these with other FFmpeg-supported codecs.
-
-**Example: Using H.264 for smaller files (lower quality)**
-If you need smaller files and don't require lossless data, you could change the command to use `libx264` for both passes:
-'''batch
-:: --- Example for H.264 output ---
-"%FFMPEG_EXE%" -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
- -map "[world]" -an -c:v libx264 -preset medium -crf 23 "%OUTPUT_WORLD%" ^
- -map "[depth]" -an -c:v libx264 -preset medium -crf 23 "%OUTPUT_DEPTH%"
-'''
+5.  You can replace these with other FFmpeg-supported codecs. For a comprehensive list of available codecs and their options, refer to the [official FFmpeg documentation](https://ffmpeg.org/ffmpeg-codecs.html).
 
 ## Troubleshooting
 -   **Shaders not appearing:** Ensure they are in the correct `reshade-shaders/Shaders` directory and that you have restarted your game.
 -   **Batch script errors:** Make sure FFmpeg is installed and accessible in your system's PATH. The script has a built-in check that will alert you if it can't find it.
--   **Incorrect output:** Double-check that the `World on Right` setting in the `99_Compare.fx` shader matches the `WORLD_ON_RIGHT` variable in `ProcessVideos.bat`.
+-   **Incorrect output:** Double-check that the `World on Right` setting in the `99_SideBySideOutput.fx` shader matches the `WORLD_ON_RIGHT` variable in `ProcessVideos.bat`.
 
 ## Contributing
 Feel free to open an issue to report bugs or suggest features.

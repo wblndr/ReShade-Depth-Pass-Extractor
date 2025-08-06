@@ -1,6 +1,6 @@
 #include "ReShade.fxh"
 
-texture OriginalTex <source="OriginalTex";>;
+texture OriginalTex { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format = RGBA8; };
 sampler OriginalTexSampler { Texture = OriginalTex; };
 
 texture EffectedTex : COLOR;
@@ -71,7 +71,7 @@ float4 PS_Compare(float4 svpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_
     return output_color;
 }
 
-technique Compare <
+technique SideBySideOutput <
     ui_tooltip = "This shader must be last in the list. It displays the original frame (from 01_Capture) side-by-side with the final processed frame, allowing for easy comparison.";
 >
 {

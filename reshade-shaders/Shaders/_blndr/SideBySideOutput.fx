@@ -72,6 +72,7 @@ float4 PS_Compare(float4 svpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_
 }
 
 technique SideBySideOutput <
+    ui_label = "END_SideBySideOutput";
     ui_tooltip = "This shader must be last in the list. It displays the original frame (from 01_Capture) side-by-side with the final processed frame, allowing for easy comparison.";
 >
 {

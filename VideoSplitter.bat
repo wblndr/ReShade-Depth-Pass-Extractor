@@ -41,6 +41,12 @@ set "MOVE_ORIGINAL_ON_SUCCESS=true"
 :: 8. If moving originals, what should the subfolder they are moved to be called?
 set "PROCESSED_ORIGINALS_SUBFOLDER=Originals_Processed"
 
+:: 9. Audio setting.
+::    Set to "true" to remove audio from all outputs.
+::    Set to "false" to keep the original audio in the main output (default).
+set "REMOVE_AUDIO=false"
+
+
 :: ################################################################################################
 :: ###                                 END OF CONFIGURATION                                     ###
 :: ################################################################################################
@@ -245,6 +251,15 @@ echo [INFO] Output (Depth): "%OUTPUT_DEPTH%"
 echo.
 echo --- FFmpeg Output ---
 
+:: --- Set audio options based on configuration ---
+if /i "!REMOVE_AUDIO!" == "true" (
+    echo [INFO] Removing audio from outputs.
+    set "WORLD_AUDIO_OPTS=-an"
+) else (
+    echo [INFO] Keeping audio in main output.
+    set "WORLD_AUDIO_OPTS=-map 0:a? -c:a copy"
+)
+
 :: --- The FFmpeg Command with DYNAMIC CROPS and OPTIMIZED CODECS ---
 :: This is the core command that splits the video. You can change the codecs here.
 ::
@@ -255,7 +270,7 @@ echo --- FFmpeg Output ---
 ::
 :: For other options (like H.264 for smaller files), see the README.md.
 "%FFMPEG_EXE%" -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
- -map "[world]" -an -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le -qscale:v 2 "%OUTPUT_WORLD%" ^
+ -map "[world]" !WORLD_AUDIO_OPTS! -c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le -qscale:v 2 "%OUTPUT_WORLD%" ^
  -map "[depth]" -an -c:v qtrle "%OUTPUT_DEPTH%"
 
 set "FFMPEG_ERRORLEVEL=%errorlevel%"

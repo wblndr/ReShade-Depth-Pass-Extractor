@@ -6,10 +6,13 @@ sampler OriginalTexSampler { Texture = OriginalTex; };
 texture EffectedTex : COLOR;
 sampler EffectedSampler { Texture = EffectedTex; };
 
-uniform int DisplayMode <
-    ui_type = "combo";
-    ui_items = "Split Game View (L/R)\0Compare Left Half\0Compare Center Half\0";
-> = 2;
+uniform float ViewShift <
+    ui_type = "slider";
+    ui_label = "View Shift";
+    ui_tooltip = "Shifts the duplicated view. 0.5 is the center, 0 is left, 1 is right.";
+    ui_min = 0.0;
+    ui_max = 1.0;
+> = 0.5;
 
 uniform bool WorldOnRight <
     ui_label = "World on Right";
@@ -26,12 +29,26 @@ float4 PS_Compare(float4 svpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_
     float4 output_color;
     bool is_effected_side;
 
+    // Calculate the starting position of the 50% view window based on the slider
+    float sample_start_x = ViewShift * 0.5;
+
+    float2 sample_uv = texcoord;
+
+    // Map the left and right halves of the screen to the same view window
     if (is_left_panel)
     {
-        float2 sample_uv = texcoord;
-        if (DisplayMode == 2)
-            sample_uv.x += 0.25;
+        // Maps [0.0, 0.5] screen coords to [sample_start_x, sample_start_x + 0.5] texture coords
+        sample_uv.x = texcoord.x + sample_start_x;
+    }
+    else // right panel
+    {
+        // Maps [0.5, 1.0] screen coords to [sample_start_x, sample_start_x + 0.5] texture coords
+        sample_uv.x = (texcoord.x - 0.5) + sample_start_x;
+    }
 
+
+    if (is_left_panel)
+    {
         if (WorldOnRight)
         {
             output_color = tex2D(EffectedSampler, sample_uv);
@@ -45,12 +62,6 @@ float4 PS_Compare(float4 svpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_
     }
     else // right panel
     {
-        float2 sample_uv = texcoord;
-        if (DisplayMode == 1)
-            sample_uv.x -= 0.5;
-        else if (DisplayMode == 2)
-            sample_uv.x -= 0.25;
-
         if (WorldOnRight)
         {
             output_color = tex2D(OriginalTexSampler, sample_uv);

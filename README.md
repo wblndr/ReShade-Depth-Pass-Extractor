@@ -1,11 +1,5 @@
 # ReShade Side-by-Side Video Extractor
 
-This project provides a set of ReShade shaders and a Windows batch script to capture and process side-by-side videos from any game running ReShade. It's designed to extract a "clean" world pass and a second pass (like a depth map, normal map, etc.) from a single recording, saving them as separate, high-quality video files.
-
-This workflow is ideal for VFX, motion graphics, and game art, allowing you to use in-game footage as a source for post-production work.
-
-
-
 ## Prerequisites
 -   ReShade installed in your game.
 -   FFmpeg installed on your system. The script will guide you if it's missing, but the easiest way is to install it via winget:

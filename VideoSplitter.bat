@@ -266,7 +266,12 @@ if /i "!REMOVE_AUDIO!" == "true" (
 ::   - Mathematically lossless, perfect for data passes like depth maps.
 ::
 :: For other options (like H.264 for smaller files), see the README.md.
-"%FFMPEG_EXE%" -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
+::
+:: The -color_range, -colorspace, and -color_primaries flags are added to
+:: explicitly tag the input video with standard broadcast colors (BT.709).
+:: This prevents FFmpeg from having to guess, avoiding potential color shifts
+:: and suppressing non-fatal warnings.
+"%FFMPEG_EXE%" -color_range 1 -colorspace 1 -color_primaries 1 -i "%INPUT_FILE%" -y -filter_complex "[0:v]crop=!WORLD_CROP![world];[0:v]crop=!DEPTH_CROP![depth]" ^
  -map "[world]" !WORLD_AUDIO_OPTS! !WORLD_VIDEO_OPTS! "%OUTPUT_WORLD%" ^
  -map "[depth]" -an !DEPTH_VIDEO_OPTS! "%OUTPUT_DEPTH%"
 

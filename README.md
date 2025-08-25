@@ -1,4 +1,5 @@
-# ReShade Side-by-Side Video Extractor
+# ReShade SBS WFX
+A workflow for creating Side-by-Side (SBS) video passes with ReShade.
 
 ## Prerequisites
 -   ReShade installed in your game.

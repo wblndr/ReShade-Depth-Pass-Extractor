@@ -15,7 +15,7 @@ A workflow for creating Side-by-Side (SBS) video passes with ReShade.
 **Note:** You will need to configure your ReShade shaders manually by following the steps below. A pre-configured preset file is not provided.
 
 1.  **Download the files** from this repository.
-2.  **Copy the `reshade-shaders` folder** into your game's root directory where the game's `.exe` file is located. This will place the `.fx` files in `[Game Directory]/reshade-shaders/Shaders/_blndr/`.
+2.  **Copy the `reshade-shaders` folder** into your game's root directory where the game's `.exe` file is located. This will place the `.fx` files in `[Game Directory]/reshade-shaders/Shaders/SBS-WFX/`.
 3.  **Start your game** and open the ReShade overlay (usually the `Home` key).
 4.  **Set the Shader Order:**
     -   Drag **`START_WorldCapture`** to the very **top** of your active shader list.
@@ -66,5 +66,3 @@ The batch script is pre-configured for high-quality, professional video formats 
 ## Contributing
 Feel free to open an issue to report bugs or suggest features.
 
----
-*Created by wblndr*

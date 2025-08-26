@@ -11,6 +11,7 @@ float4 PS_Capture(float4 vpos : SV_Position, float2 texcoord : TEXCOORD0) : SV_T
 }
 
 technique WorldCapture <
+    ui_label = "START_WorldCapture";
     ui_tooltip = "This shader must be first in the list. It captures the original, unmodified frame so that it can be compared later with the final processed frame (e.g., depth map).";
 >
 {
